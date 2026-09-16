@@ -7,7 +7,9 @@
     // extension rewrites "servertype" to "external" and points gdb at its own
     // port: the board is in the browser, and the flasher answers gdb over
     // WebUSB. Nothing to choose, nothing to edit.
+
     "version": "0.2.0",
+
     "configurations": [
         {
             "name": "Debug (PyOCD)",
@@ -15,11 +17,17 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "executable": "${workspaceFolder}/build/main.elf",
+
             "servertype": "pyocd",
             "targetId": "nrf52833",
+
+            "gdbPath": "/home/samuel/.local/share/alire/toolchains/gnat_arm_elf_15.1.2_f21ddf05/bin/arm-eabi-gdb",
+
             "preLaunchTask": "Build",
+
             "showDevDebugOutput": "vscode"
-            // "runToEntryPoint": "main"  // uncomment to break on start
+
+            // "runToEntryPoint": "main"
         }
     ]
 }

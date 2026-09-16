@@ -21,8 +21,10 @@ use MicroBit;
 procedure Main with Priority => 0 is
 
 begin
-   Put_Line (" <-- The zero means: Let's get started...");
+
    loop
-      null;
+      Put_Line ("TEST");
+      delay 1.0;
    end loop;
+
 end Main;

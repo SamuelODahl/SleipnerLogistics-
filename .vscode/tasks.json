@@ -1,14 +1,22 @@
 {
-    // Every task is "type": "process" -- VS Code runs the program directly with
-    // no shell, so there is nothing for zsh / cmd / PowerShell to quote
-    // differently and these tasks behave identically on macOS, Linux, Windows
-    // and inside the devcontainer.
-    //
-    // mb.py drives everything through Alire, so no PATH setup is needed.
     "version": "2.0.0",
     "tasks": [
         {
             "label": "Build & Flash",
+            "detail": "Build, flash micro:bit, then start serial monitor",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Flash micro:bit",
+                "Serial Monitor"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Flash micro:bit",
             "detail": "Build the template and flash it to the micro:bit",
             "type": "process",
             "command": "python3",
@@ -16,7 +24,37 @@
             "args": ["tools/mb.py", "flash"],
             "options": { "cwd": "${workspaceFolder}" },
             "problemMatcher": ["$ada-error", "$ada-warning"],
-            "group": { "kind": "build", "isDefault": true }
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false,
+                "showReuseMessage": false
+            }
+        },
+        {
+            "label": "Serial Monitor",
+            "detail": "Show micro:bit serial output",
+            "type": "shell",
+            "command": "stty -F /dev/ttyACM0 115200 raw -echo && echo SERIAL_READY && cat /dev/ttyACM0",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "microbit",
+                "pattern": {
+                    "regexp": "^(.*)$",
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^SERIAL_READY$",
+                    "endsPattern": "^SERIAL_READY$"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true,
+                "showReuseMessage": false
+            }
         },
         {
             "label": "Build",
@@ -41,8 +79,6 @@
             "group": "build"
         },
         {
-            // Deliberately NOT the default build task: with no editor focused
-            // VS Code cannot resolve ${fileDirname} and refuses to start.
             "label": "Build the file I'm looking at",
             "detail": "Build the example containing the currently open file",
             "type": "process",
@@ -65,9 +101,6 @@
             "group": "build"
         },
         {
-            // Codespaces have no USB, so the firmware normally has to be
-            // downloaded and handed to the flasher by hand. This serves the
-            // flasher from here instead, with the build already loaded.
             "label": "Flash from here (serve flasher)",
             "detail": "Serve the flasher on port 8080 with the firmware you just built",
             "type": "process",
@@ -77,7 +110,10 @@
             "options": { "cwd": "${workspaceFolder}" },
             "problemMatcher": ["$ada-error", "$ada-warning"],
             "isBackground": true,
-            "presentation": { "reveal": "always", "panel": "dedicated" }
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
         },
         {
             "label": "Erase",
