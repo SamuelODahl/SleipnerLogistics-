@@ -1,23 +1,20 @@
-with MicroBit.Console; use MicroBit.Console;
-use MicroBit;
-with Microbit.MotorDriver;
-
--- USN PROJECT TEMPLATE INTELLIGENT REAL-TIME SYSTEMS
--- Project name: Sleipner Logistics
--- Project members: Samuel Olsson Dahl, Daniel Gulliksrud Nilssen, Jostein Moen Johansen
+with Motors;
 
 procedure Main is
 begin
-   MicroBit.MotorDriver.Drive (
-      MicroBit.MotorDriver.Forward, (4095,0,0,0));
 
-   delay 1.0;
+   Motors.Forward(50);
 
-   MicroBit.MotorDriver.Drive (
-      MicroBit.MotorDriver.Stop);
+   delay 2.0;
+
+   Motors.Backward(100);
+
+   delay 2.0;
+
+   Motors.Stop;
 
    loop
       null;
    end loop;
 
-end Main; 
+end Main;
