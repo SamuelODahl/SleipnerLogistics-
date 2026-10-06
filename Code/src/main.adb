@@ -1,20 +1,9 @@
-with Motors;
+with Control;
 
 procedure Main is
 begin
-
-   Motors.Forward(50);
-
-   delay 2.0;
-
-   Motors.Backward(100);
-
-   delay 2.0;
-
-   Motors.Stop;
-
    loop
-      null;
+      Control.Update;
+      delay 0.05;
    end loop;
-
 end Main;
