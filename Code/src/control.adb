@@ -12,8 +12,12 @@ package body Control is
    Resume_Distance  : constant Sensors.Distance_cm := 40;
    Max_Failed_Reads : constant Natural := 3;
 
-   Failed_Reads : Natural := 0;
-   Is_Stopped   : Boolean := False;
+   type Car_State is
+     (Moving_Forward,
+      Stopped);
+
+   Current_State : Car_State := Moving_Forward;
+   Failed_Reads  : Natural := 0;
 
    procedure Update is
       Front : Sensors.Distance_cm;
@@ -22,29 +26,44 @@ package body Control is
 
       Put_Line ("Front: " & Sensors.Distance_cm'Image (Front));
 
+      -- Failed sensor reading
       if Front = 0 then
          Failed_Reads := Failed_Reads + 1;
 
          if Failed_Reads >= Max_Failed_Reads then
             Motors.Stop;
-            Is_Stopped := True;
+            Current_State := Stopped;
          end if;
 
-      else
-         Failed_Reads := 0;
-
-         if Front <= Stop_Distance then
-            Motors.Stop;
-            Is_Stopped := True;
-
-         elsif Front >= Resume_Distance then
-            Motors.Forward (50);
-            Is_Stopped := False;
-
-         -- Between 30 and 40 cm:
-         -- keep the current motor state
-         end if;
+         return;
       end if;
+
+      -- Valid reading
+      Failed_Reads := 0;
+
+      case Current_State is
+
+         when Moving_Forward =>
+
+            if Front <= Stop_Distance then
+               Motors.Stop;
+               Current_State := Stopped;
+            else
+               Motors.Forward (50);
+            end if;
+
+
+         when Stopped =>
+
+            if Front >= Resume_Distance then
+               Motors.Forward (50);
+               Current_State := Moving_Forward;
+            else
+               Motors.Stop;
+            end if;
+
+      end case;
+
    end Update;
 
 end Control;
