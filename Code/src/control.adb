@@ -1,10 +1,8 @@
 with MicroBit.Types;
 use type MicroBit.Types.Distance_cm;
 
-with MicroBit.Console; use MicroBit.Console;
-
 with Sensors;
-with Motors;
+with Movement_Commands;
 
 package body Control is
 
@@ -19,48 +17,55 @@ package body Control is
    Current_State : Car_State := Moving_Forward;
    Failed_Reads  : Natural := 0;
 
-   procedure Update is
-      Front : Sensors.Distance_cm;
-   begin
-      Front := Sensors.Front_Distance;
+   function Update
+     (Front : Sensors.Distance_cm)
+      return Movement_Commands.Movement_Command
+   is
+      use Movement_Commands;
 
-      Put_Line ("Front: " & Sensors.Distance_cm'Image (Front));
+   begin
 
       -- Failed sensor reading
       if Front = 0 then
          Failed_Reads := Failed_Reads + 1;
 
          if Failed_Reads >= Max_Failed_Reads then
-            Motors.Stop;
             Current_State := Stopped;
          end if;
 
-         return;
+      else
+
+         -- Valid reading
+         Failed_Reads := 0;
+
+         case Current_State is
+
+            when Moving_Forward =>
+
+               if Front <= Stop_Distance then
+                  Current_State := Stopped;
+               end if;
+
+            when Stopped =>
+
+               if Front >= Resume_Distance then
+                  Current_State := Moving_Forward;
+               end if;
+
+         end case;
+
       end if;
 
-      -- Valid reading
-      Failed_Reads := 0;
-
+      -- Return a movement command based on the current state
       case Current_State is
 
          when Moving_Forward =>
-
-            if Front <= Stop_Distance then
-               Motors.Stop;
-               Current_State := Stopped;
-            else
-               Motors.Forward (50);
-            end if;
-
+            return (Direction => Forward,
+                    Speed     => 50);
 
          when Stopped =>
-
-            if Front >= Resume_Distance then
-               Motors.Forward (50);
-               Current_State := Moving_Forward;
-            else
-               Motors.Stop;
-            end if;
+            return (Direction => Stop,
+                    Speed     => 0);
 
       end case;
 
