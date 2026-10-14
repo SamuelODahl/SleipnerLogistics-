@@ -1,3 +1,5 @@
+with Ada.Real_Time;
+
 package body Shared_Data is
 
    protected body Sensor_Data is
@@ -12,7 +14,7 @@ package body Shared_Data is
       procedure Get
         (Readings : out Sensors.Sensor_Readings;
          Sequence : out Sequence_Number;
-         Has_Data    : out Boolean) is
+         Has_Data : out Boolean) is
       begin
          Readings := Current_Readings;
          Sequence := Current_Sequence;
@@ -26,11 +28,15 @@ package body Shared_Data is
       procedure Set (Command : Movement_Commands.Movement_Command) is
       begin
          Current_Command := Command;
+         Last_Command_Update := Ada.Real_Time.Clock;
       end Set;
 
-      function Get return Movement_Commands.Movement_Command is
+      procedure Get
+        (Command     : out Movement_Commands.Movement_Command;
+         Last_Update : out Ada.Real_Time.Time) is
       begin
-         return Current_Command;
+         Command := Current_Command;
+         Last_Update := Last_Command_Update;
       end Get;
 
    end Motor_Data;

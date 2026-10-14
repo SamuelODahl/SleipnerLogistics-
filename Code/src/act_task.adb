@@ -14,12 +14,20 @@ package body Act_Task is
 
       Command : Movement_Commands.Movement_Command;
 
+      Last_Update   : Time;
+      Motor_Timeout : constant Time_Span := Milliseconds (300);
+
    begin
 
       loop
 
          -- Get the latest movement command
-         Command := Shared_Data.Motor_Data.Get;
+         Shared_Data.Motor_Data.Get (Command, Last_Update);
+
+         -- Stop if Think has not published a new command recently
+         if Clock - Last_Update >= Motor_Timeout then
+            Command := (Direction => Movement_Commands.Stop, Speed => 0);
+         end if;
 
          -- Execute the command
          case Command.Direction is

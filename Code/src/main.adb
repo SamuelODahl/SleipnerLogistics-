@@ -4,7 +4,9 @@ with Act_Task;
 
 procedure Main is
 begin
+
    loop
       delay 1.0;
    end loop;
+
 end Main;

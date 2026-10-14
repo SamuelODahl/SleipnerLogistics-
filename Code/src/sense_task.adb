@@ -1,5 +1,4 @@
-with Ada.Real_Time;
-use Ada.Real_Time;
+with Ada.Real_Time; use Ada.Real_Time;
 
 with Sensors;
 with Shared_Data;
@@ -16,17 +15,13 @@ package body Sense_Task is
    begin
 
       loop
-
-         -- Read the front ultrasonic sensor
          Readings.Front := Sensors.Front_Distance;
 
          -- Publish the measurements
          Shared_Data.Sensor_Data.Set (Readings);
 
-         -- Calculate the next activation time
+         -- Wait until next period
          Next_Release := Next_Release + Period;
-
-         -- Wait until that time
          delay until Next_Release;
 
       end loop;
@@ -34,3 +29,4 @@ package body Sense_Task is
    end Sense;
 
 end Sense_Task;
+
