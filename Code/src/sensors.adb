@@ -18,10 +18,10 @@ package body Sensors is
      (MB_P2, MB_P8);
 
    package Left_Sensor is new Ultrasonic
-     (MB_P12, MB_P13);
+     (MB_P14, MB_P15);
 
    package Right_Sensor is new Ultrasonic
-     (MB_P14, MB_P15);
+     (MB_P12, MB_P13);
 
 
    -- Stores the three most recent valid front sensor readings

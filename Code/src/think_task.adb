@@ -39,7 +39,7 @@ package body Think_Task is
             -- A new sensor measurement has arrived
             Last_Sensor_Update := Clock;
 
-            Command := Control.Update (Readings.Front);
+            Command := Control.Update (Readings);
             Shared_Data.Motor_Data.Set (Command);
 
             Last_Sequence := Sequence;

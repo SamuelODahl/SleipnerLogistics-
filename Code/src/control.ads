@@ -4,7 +4,7 @@ with Movement_Commands;
 package Control is
 
    function Update
-     (Front : Sensors.Distance_cm)
+     (Readings : Sensors.Sensor_Readings)
       return Movement_Commands.Movement_Command;
 
 end Control;
