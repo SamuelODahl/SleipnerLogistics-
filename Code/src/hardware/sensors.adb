@@ -15,7 +15,7 @@ package body Sensors is
      (MB_P0, MB_P1);
 
    package Rear_Sensor is new Ultrasonic
-     (MB_P2, MB_P8);
+     (MB_P2, MB_P16);
 
    package Left_Sensor is new Ultrasonic
      (MB_P14, MB_P15);
