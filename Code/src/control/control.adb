@@ -6,9 +6,9 @@ with Movement_Commands;
 
 package body Control is
 
-   Stop_Distance    : constant Sensors.Distance_cm := 30;
-   Resume_Distance  : constant Sensors.Distance_cm := 40;
-   Side_Clearance : constant Sensors.Distance_cm := 40;
+   Stop_Distance    : constant Sensors.Distance_cm := 40;
+   Resume_Distance  : constant Sensors.Distance_cm := 50;
+   Side_Clearance : constant Sensors.Distance_cm := 35;
    Side_Stop_Distance : constant Sensors.Distance_cm := 20;
    Max_Failed_Reads : constant Natural := 3;
 
@@ -75,6 +75,14 @@ package body Control is
             when Stopped                      =>
                if Readings.Front >= Resume_Distance then
                   Current_State := Moving_Forward;
+
+               elsif Readings.Left >= Side_Clearance
+                 and then Readings.Left >= Readings.Right
+               then
+                  Current_State := Turning_Left;
+
+               elsif Readings.Right >= Side_Clearance then
+                  Current_State := Turning_Right;
                end if;
 
             when Turning_Left | Turning_Right =>
