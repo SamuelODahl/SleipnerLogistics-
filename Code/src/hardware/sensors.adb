@@ -7,22 +7,19 @@ use type MicroBit.Types.Distance_cm;
 
 package body Sensors is
 
-   -- TEMPORARY PIN ASSIGNMENTS
    -- Each sensor uses Standard 4-Wire Mode:
    -- first pin = Trigger, second pin = Echo.
 
-   package Front_Sensor is new Ultrasonic
-     (MB_P0, MB_P1);
+   -- Immediately report valid front readings at or below this distance.
+   Emergency_Distance : constant Distance_cm := 40;
 
-   package Rear_Sensor is new Ultrasonic
-     (MB_P2, MB_P16);
+   package Front_Sensor is new Ultrasonic (MB_P0, MB_P1);
 
-   package Left_Sensor is new Ultrasonic
-     (MB_P14, MB_P15);
+   package Rear_Sensor is new Ultrasonic (MB_P2, MB_P16);
 
-   package Right_Sensor is new Ultrasonic
-     (MB_P12, MB_P13);
+   package Left_Sensor is new Ultrasonic (MB_P14, MB_P15);
 
+   package Right_Sensor is new Ultrasonic (MB_P12, MB_P13);
 
    -- Stores the three most recent valid front sensor readings
    Front_Sample_1 : Distance_cm := 0;
@@ -31,28 +28,19 @@ package body Sensors is
 
    Front_Sample_Count : Natural range 0 .. 3 := 0;
 
-
    function Median
-     (A : Distance_cm;
-      B : Distance_cm;
-      C : Distance_cm) return Distance_cm
-   is
+     (A : Distance_cm; B : Distance_cm; C : Distance_cm) return Distance_cm is
    begin
-      if (A <= B and B <= C) or else
-         (C <= B and B <= A)
-      then
+      if (A <= B and B <= C) or else (C <= B and B <= A) then
          return B;
 
-      elsif (B <= A and A <= C) or else
-            (C <= A and A <= B)
-      then
+      elsif (B <= A and A <= C) or else (C <= A and A <= B) then
          return A;
 
       else
          return C;
       end if;
    end Median;
-
 
    function Front_Distance return Distance_cm is
       Raw : constant Distance_cm := Front_Sensor.Read;
@@ -63,7 +51,6 @@ package body Sensors is
       if Raw = 0 then
          return 0;
       end if;
-
 
       -- Fill the filter during the first three valid readings.
       if Front_Sample_Count = 0 then
@@ -92,25 +79,39 @@ package body Sensors is
 
       end if;
 
-      return Median
-        (Front_Sample_1,
-         Front_Sample_2,
-         Front_Sample_3);
+      -- Emergency detection:
+      -- Immediately report a valid close obstacle instead of waiting for the median filter to catch up.
+      if Raw <= Emergency_Distance then
+
+         -- Very close obstacles always trigger immediately.
+         if Raw <= 25 then
+            return Raw;
+         end if;
+
+         -- Otherwise require support from the median filter.
+         if Median (Front_Sample_1, Front_Sample_2, Front_Sample_3)
+           <= Emergency_Distance
+         then
+            return Raw;
+         end if;
+
+      end if;
+
+      -- Normal operation:
+      -- Use the median filter to reduce measurement noise.
+      return Median (Front_Sample_1, Front_Sample_2, Front_Sample_3);
 
    end Front_Distance;
-
 
    function Rear_Distance return Distance_cm is
    begin
       return Rear_Sensor.Read;
    end Rear_Distance;
 
-
    function Left_Distance return Distance_cm is
    begin
       return Left_Sensor.Read;
    end Left_Distance;
-
 
    function Right_Distance return Distance_cm is
    begin
