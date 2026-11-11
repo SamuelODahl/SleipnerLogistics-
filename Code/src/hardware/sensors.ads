@@ -4,7 +4,7 @@ package Sensors is
 
    subtype Distance_cm is MicroBit.Types.Distance_cm;
 
-   -- Stores measurements from all four sensors
+   -- stores measurements from all four sensors
    type Sensor_Readings is record
       Front : Distance_cm := 0;
       Rear  : Distance_cm := 0;

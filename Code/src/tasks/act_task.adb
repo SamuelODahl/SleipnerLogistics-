@@ -1,15 +1,14 @@
-with Ada.Real_Time;
-use Ada.Real_Time;
+with Ada.Real_Time; use Ada.Real_Time;
 
-with Ada.Execution_Time;
-use Ada.Execution_Time;
+with Ada.Execution_Time; use Ada.Execution_Time;
 
-with MicroBit.Console;
-use MicroBit.Console;
+with MicroBit.Console; use MicroBit.Console;
 
 with Shared_Data;
 with Movement_Commands;
 with Motors;
+
+-- timing measurements are only used for the time analysis and are not part of the robots functionality
 
 package body Act_Task is
 
@@ -38,52 +37,45 @@ package body Act_Task is
 
       loop
 
-         -- Start execution-time measurements
          Time_Now_Stopwatch := Ada.Real_Time.Clock;
          Time_Now_CPU := Ada.Execution_Time.Clock;
 
-         -- Get the latest movement command
          Shared_Data.Motor_Data.Get (Command, Last_Update);
 
-         -- Stop if Think has not published a new command recently
+         -- stop if think has not published a new command recently
          if Clock - Last_Update >= Motor_Timeout then
             Command := (Direction => Movement_Commands.Stop, Speed => 0);
          end if;
 
-         -- Execute the command
          case Command.Direction is
 
-            when Movement_Commands.Forward =>
+            when Movement_Commands.Forward      =>
                Motors.Forward (Command.Speed);
 
-            when Movement_Commands.Backward =>
+            when Movement_Commands.Backward     =>
                Motors.Backward (Command.Speed);
 
-            when Movement_Commands.Strafe_Left =>
+            when Movement_Commands.Strafe_Left  =>
                Motors.Strafe_Left (Command.Speed);
 
             when Movement_Commands.Strafe_Right =>
                Motors.Strafe_Right (Command.Speed);
 
-            when Movement_Commands.Rotate_Left =>
+            when Movement_Commands.Rotate_Left  =>
                Motors.Rotate_Left (Command.Speed);
 
             when Movement_Commands.Rotate_Right =>
                Motors.Rotate_Right (Command.Speed);
 
-            when Movement_Commands.Stop =>
+            when Movement_Commands.Stop         =>
                Motors.Stop;
 
          end case;
 
-         -- Calculate execution times
-         Elapsed_Stopwatch :=
-           Ada.Real_Time.Clock - Time_Now_Stopwatch;
+         Elapsed_Stopwatch := Ada.Real_Time.Clock - Time_Now_Stopwatch;
 
-         Elapsed_CPU :=
-           Ada.Execution_Time.Clock - Time_Now_CPU;
+         Elapsed_CPU := Ada.Execution_Time.Clock - Time_Now_CPU;
 
-         -- Store maximum observed times
          if Elapsed_Stopwatch > Max_Stopwatch then
             Max_Stopwatch := Elapsed_Stopwatch;
          end if;
@@ -94,7 +86,6 @@ package body Act_Task is
 
          Measurement_Count := Measurement_Count + 1;
 
-         -- Print results every 500 iterations
          if Measurement_Count = 500 then
 
             Put_Line
@@ -113,7 +104,7 @@ package body Act_Task is
 
          end if;
 
-         -- Wait until next activation
+         -- keep the task running at a fixed 20ms period
          Next_Release := Next_Release + Period;
          delay until Next_Release;
 

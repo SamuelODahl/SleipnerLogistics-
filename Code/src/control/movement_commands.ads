@@ -1,3 +1,5 @@
+-- these are my movement commands that will be used to control the car
+
 with Motors;
 
 package Movement_Commands is

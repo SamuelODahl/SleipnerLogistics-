@@ -5,8 +5,8 @@ use HAL;
 
 package body Motors is
 
-   -- made this function to convert the 0-100 range to the 0-4095 range used by the motor driver
-   -- my reason for 0-100 range is that it is easier to think about and use, and it is more intuitive for the user
+   -- Using 0-100 for speed since it's easier to work with,
+   -- then converting it to the 0-4095 range the motor driver needs
    function To_Driver_speed (Motor_Speed : Throttle) return UInt12 is
    begin
       return UInt12 ((Integer (Motor_Speed) * 4095) / 100);

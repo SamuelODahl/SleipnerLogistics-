@@ -14,6 +14,8 @@ use type Shared_Data.Sequence_Number;
 with Control;
 with Movement_Commands;
 
+-- timing measurements are only used for the time analysis and are not part of the robots functionality
+
 package body Think_Task is
 
    task body Think is
@@ -48,17 +50,14 @@ package body Think_Task is
 
       loop
 
-         -- Start execution-time measurements
          Time_Now_Stopwatch := Ada.Real_Time.Clock;
          Time_Now_CPU := Ada.Execution_Time.Clock;
 
-         -- Get the latest sensor readings
          Shared_Data.Sensor_Data.Get (Readings, Sequence, Has_Data);
 
-         -- Only process new measurements
+         -- uses the sequence number to not process the same sensor data twice 
          if Has_Data and then Sequence /= Last_Sequence then
 
-            -- A new sensor measurement has arrived
             Last_Sensor_Update := Clock;
 
             Command := Control.Update (Readings);
@@ -68,20 +67,18 @@ package body Think_Task is
 
          elsif Clock - Last_Sensor_Update >= Sensor_Timeout then
 
-            -- No new sensor measurements within the timeout
+            -- stop the car if the sensor readings haven't been updated for 300 ms
             Shared_Data.Motor_Data.Set
               ((Direction => Movement_Commands.Stop, Speed => 0));
 
          end if;
 
-         -- Calculate execution times
          Elapsed_Stopwatch :=
            Ada.Real_Time.Clock - Time_Now_Stopwatch;
 
          Elapsed_CPU :=
            Ada.Execution_Time.Clock - Time_Now_CPU;
 
-         -- Store maximum observed times
          if Elapsed_Stopwatch > Max_Stopwatch then
             Max_Stopwatch := Elapsed_Stopwatch;
          end if;
@@ -92,7 +89,6 @@ package body Think_Task is
 
          Measurement_Count := Measurement_Count + 1;
 
-         -- Print results every 200 iterations
          if Measurement_Count = 200 then
 
             Put_Line
@@ -111,7 +107,7 @@ package body Think_Task is
 
          end if;
 
-         -- Wait until next activation
+         -- keep the task running at a fixed 50ms period
          Next_Release := Next_Release + Period;
          delay until Next_Release;
 

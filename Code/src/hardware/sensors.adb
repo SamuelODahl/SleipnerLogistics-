@@ -7,12 +7,8 @@ use type MicroBit.Types.Distance_cm;
 
 package body Sensors is
 
-   -- Each sensor uses Standard 4-Wire Mode:
-   -- first pin = Trigger, second pin = Echo.
-
-   -- Immediately report valid front readings at or below this distance.
    Emergency_Distance : constant Distance_cm := 40;
-
+   -- first pin = Trigger, second pin = Echo.
    package Front_Sensor is new Ultrasonic (MB_P0, MB_P1);
 
    package Rear_Sensor is new Ultrasonic (MB_P2, MB_P16);
@@ -21,13 +17,14 @@ package body Sensors is
 
    package Right_Sensor is new Ultrasonic (MB_P12, MB_P13);
 
-   -- Stores the three most recent valid front sensor readings
+   -- keep the last three valid readings for my median filter
    Front_Sample_1 : Distance_cm := 0;
    Front_Sample_2 : Distance_cm := 0;
    Front_Sample_3 : Distance_cm := 0;
 
    Front_Sample_Count : Natural range 0 .. 3 := 0;
 
+   -- takes the middle value of three readings to filter out random spikes
    function Median
      (A : Distance_cm; B : Distance_cm; C : Distance_cm) return Distance_cm is
    begin
@@ -46,13 +43,11 @@ package body Sensors is
       Raw : constant Distance_cm := Front_Sensor.Read;
    begin
 
-      -- 0 means the sensor failed to get a measurement.
-      -- Do not put failed measurements into the filter.
+      -- dont put failed readings in the filter
       if Raw = 0 then
          return 0;
       end if;
 
-      -- Fill the filter during the first three valid readings.
       if Front_Sample_Count = 0 then
 
          Front_Sample_1 := Raw;
@@ -72,23 +67,20 @@ package body Sensors is
 
       else
 
-         -- Shift old samples and add the newest one.
          Front_Sample_1 := Front_Sample_2;
          Front_Sample_2 := Front_Sample_3;
          Front_Sample_3 := Raw;
 
       end if;
 
-      -- Emergency detection:
-      -- Immediately report a valid close obstacle instead of waiting for the median filter to catch up.
+      -- checks for emergency distance first so that the median filter doesnt delay the response
       if Raw <= Emergency_Distance then
 
-         -- Very close obstacles always trigger immediately.
          if Raw <= 25 then
             return Raw;
          end if;
 
-         -- Otherwise require support from the median filter.
+         -- less critical, check with median filter
          if Median (Front_Sample_1, Front_Sample_2, Front_Sample_3)
            <= Emergency_Distance
          then
@@ -97,8 +89,6 @@ package body Sensors is
 
       end if;
 
-      -- Normal operation:
-      -- Use the median filter to reduce measurement noise.
       return Median (Front_Sample_1, Front_Sample_2, Front_Sample_3);
 
    end Front_Distance;

@@ -1,15 +1,14 @@
-with Ada.Real_Time;
-use Ada.Real_Time;
+with Ada.Real_Time; use Ada.Real_Time;
 
-with Ada.Execution_Time;
-use Ada.Execution_Time;
+with Ada.Execution_Time; use Ada.Execution_Time;
 
-with MicroBit.Console;
-use MicroBit.Console;
+with MicroBit.Console; use MicroBit.Console;
 
 with Sensors;
 with Shared_Data;
 with Motors;
+
+-- timing measurements are only used for the time analysis and are not part of the robots functionality
 
 package body Sense_Task is
 
@@ -35,27 +34,20 @@ package body Sense_Task is
 
       loop
 
-         -- Start execution-time measurements
          Time_Now_Stopwatch := Ada.Real_Time.Clock;
          Time_Now_CPU := Ada.Execution_Time.Clock;
 
-         -- Read all four ultrasonic sensors
          Readings.Front := Sensors.Front_Distance;
-         Readings.Rear  := Sensors.Rear_Distance;
-         Readings.Left  := Sensors.Left_Distance;
+         Readings.Rear := Sensors.Rear_Distance;
+         Readings.Left := Sensors.Left_Distance;
          Readings.Right := Sensors.Right_Distance;
 
-         -- Publish measurements to THINK
          Shared_Data.Sensor_Data.Set (Readings);
 
-         -- Calculate execution times
-         Elapsed_Stopwatch :=
-           Ada.Real_Time.Clock - Time_Now_Stopwatch;
+         Elapsed_Stopwatch := Ada.Real_Time.Clock - Time_Now_Stopwatch;
 
-         Elapsed_CPU :=
-           Ada.Execution_Time.Clock - Time_Now_CPU;
+         Elapsed_CPU := Ada.Execution_Time.Clock - Time_Now_CPU;
 
-         -- Store maximum observed times
          if Elapsed_Stopwatch > Max_Stopwatch then
             Max_Stopwatch := Elapsed_Stopwatch;
          end if;
@@ -66,7 +58,6 @@ package body Sense_Task is
 
          Measurement_Count := Measurement_Count + 1;
 
-         -- Print results every 100 iterations
          if Measurement_Count = 100 then
 
             Put_Line
@@ -75,9 +66,7 @@ package body Sense_Task is
                & " s");
 
             Put_Line
-              ("Max CPU: "
-               & Duration'Image (To_Duration (Max_CPU))
-               & " s");
+              ("Max CPU: " & Duration'Image (To_Duration (Max_CPU)) & " s");
 
             Measurement_Count := 0;
             Max_Stopwatch := Time_Span_Zero;
@@ -85,7 +74,7 @@ package body Sense_Task is
 
          end if;
 
-         -- Wait until next scheduled activation
+         -- keep the task running at a fixed 150ms period
          Next_Release := Next_Release + Period;
          delay until Next_Release;
 
@@ -94,7 +83,7 @@ package body Sense_Task is
    exception
       when others =>
 
-         -- Diagnostic handler for unexpected exceptions
+         -- stop the motors if the sensor task crashes
          Motors.Stop;
          Put_Line ("ERROR: SENSE task terminated");
 

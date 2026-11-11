@@ -36,7 +36,7 @@ package body Control is
 
    begin
 
-      -- Failed front sensor reading
+      -- 0 means the sensor failed to get a distance
       if Readings.Front = 0 then
          Failed_Reads := Failed_Reads + 1;
 
@@ -44,8 +44,7 @@ package body Control is
             Current_State := Stopped;
          end if;
 
-         -- Allow recovery by rotating when the front sensor
-         -- cannot provide a valid distance.
+         -- if the front keeps failing it will try to turn if possible
          if Current_State = Stopped then
 
             if Readings.Left >= Side_Clearance
@@ -78,7 +77,7 @@ package body Control is
                      Current_State := Turning_Right;
 
                   elsif Readings.Rear >= Rear_Clearance then
-                     -- No room to turn, but rear is clear
+                     -- if its "boxed in" it will try to reverse if possible
                      Current_State := Reversing;
 
                   else
@@ -114,14 +113,13 @@ package body Control is
                elsif Readings.Front <= Stop_Distance
                  and then Readings.Rear >= Rear_Clearance
                then
-                  -- Escape when front and sides are blocked
                   Current_State := Reversing;
                end if;
 
             when Reversing      =>
 
                if Readings.Rear = 0 or else Readings.Rear < Rear_Clearance then
-                  -- Rear obstacle or invalid measurement
+                  -- wont reverese if rear is too close to something or it gets a failed reading
                   Current_State := Stopped;
 
                elsif Readings.Front >= Resume_Distance then
@@ -142,14 +140,12 @@ package body Control is
                if Readings.Left > 0
                  and then Readings.Left <= Side_Stop_Distance
                then
-                  -- Left side too close.
                   Current_State := Stopped;
 
                elsif Readings.Front > 0
                  and then Readings.Front <= Front_Emergency_Distance
                then
-                  -- Front dangerously close.
-                  -- Reverse only if rear clearance is sufficient.
+                  -- front dangerously close while turning, added to try to stop the car from turning into something
                   if Readings.Rear >= Rear_Clearance then
                      Current_State := Reversing;
                   else
@@ -166,14 +162,12 @@ package body Control is
                if Readings.Right > 0
                  and then Readings.Right <= Side_Stop_Distance
                then
-                  -- Right side too close.
                   Current_State := Stopped;
 
                elsif Readings.Front > 0
                  and then Readings.Front <= Front_Emergency_Distance
                then
-                  -- Front dangerously close.
-                  -- Reverse only if rear clearance is sufficient.
+                  -- same as turning left, but for the right side
                   if Readings.Rear >= Rear_Clearance then
                      Current_State := Reversing;
                   else
@@ -190,13 +184,10 @@ package body Control is
                if Readings.Right = 0
                  or else Readings.Right <= Side_Stop_Distance
                then
-                  -- Cannot safely continue strafing right.
                   Current_State := Stopped;
 
                elsif Readings.Front <= Stop_Distance then
 
-                  -- Front obstacle detected.
-                  -- Try turning right if there is enough space.
                   if Readings.Right >= Side_Clearance then
                      Current_State := Turning_Right;
                   else
@@ -212,13 +203,10 @@ package body Control is
 
                if Readings.Left = 0 or else Readings.Left <= Side_Stop_Distance
                then
-                  -- Cannot safely continue strafing left.
                   Current_State := Stopped;
 
                elsif Readings.Front <= Stop_Distance then
 
-                  -- Front obstacle detected.
-                  -- Try turning left if there is enough space.
                   if Readings.Left >= Side_Clearance then
                      Current_State := Turning_Left;
                   else
@@ -234,14 +222,14 @@ package body Control is
 
       end if;
 
-      -- Never reverse without a valid, clear rear measurement
+      -- noted earlier, but this is to make sure it wont reverse if it is not safe
       if Current_State = Reversing
         and then (Readings.Rear = 0 or else Readings.Rear < Rear_Clearance)
       then
          Current_State := Stopped;
       end if;
 
-      -- Stop rotation if the side it is turning toward becomes dangerously close.
+      -- extra check will turning
       if Current_State = Turning_Left
         and then Readings.Left > 0
         and then Readings.Left <= Side_Stop_Distance
@@ -255,7 +243,7 @@ package body Control is
          Current_State := Stopped;
       end if;
 
-      -- Return movement command based on current state
+      -- returns the movement command based on the current state of the car
       case Current_State is
 
          when Moving_Forward =>
