@@ -32,7 +32,7 @@ package Shared_Data is
          Last_Update : out Ada.Real_Time.Time);
 
    private
-
+      -- init the car to stop before it gets its first command
       Current_Command : Movement_Commands.Movement_Command :=
         (Direction => Movement_Commands.Stop, Speed => 0);
       -- timestamp used to check if the motor command gets too old

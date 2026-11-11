@@ -25,6 +25,7 @@ package body Control is
       Reversing,
       Stopped);
 
+   -- init logical state
    Current_State : Car_State := Moving_Forward;
    Failed_Reads  : Natural := 0;
 
